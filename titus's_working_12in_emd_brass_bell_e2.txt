@@ -30,7 +30,8 @@ if(first()){ E:setAlpha(0)
     OnRate = 0.1
     OffRate = 0.58
     
-    ShowParentEntities = 0
+    
+    ShowParentEntities = 0 #For dev use only
     
     
     A = 1
