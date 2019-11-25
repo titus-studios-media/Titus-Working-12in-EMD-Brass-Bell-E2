@@ -1,0 +1,200 @@
+@name Titus's Working 12in EMD Brass Bell E2
+@inputs ToggleInput NonToggleInput
+@outputs
+@persist [MasterColor MasterScale]:vector [RingerTexture BrassTexture SpacerTexture BoltTexture MountTexture RubberTexture StartSound EndSound]:string Layer1 OnRate OffRate Hit AngHit HitC On RingerType
+@persist ShowParentEntities
+@trigger 
+@model models/anytrains/props/detail/12in_emd_bell_brass.mdl
+ 
+E = entity()
+
+if(dupefinished() | duped()){ reset() }
+if(first()){ E:setAlpha(0)
+
+    MasterColor = vec(255)
+    MasterScale = vec(1)
+    RingerType = 0 #0 = Horizontal Ringer, 1 = Vertical Ringer
+    SpacerBlock = 1
+    Mount = 0
+    RingerTexture = "models/proppertextures/enamel_darkgray"
+    BrassTexture = "models/proppertextures/brass"
+    SpacerTexture = "models/proppertextures/enamel_darkgray"
+    BoltTexture = "models/proppertextures/aluminum"
+    MountTexture = "models/proppertextures/acrylic"
+    RubberTexture = "models/proppertextures/rubber"
+    
+    StartSound = "gsgtrainsounds/bells/emd_8004156_bronze_bell_loop3.wav"
+    EndSound = "gsgtrainsounds/bells/emd_8004156_bronze_bell_end3.wav"
+    
+    # Hammer "Push/Pull" Rates. Set to be [somewhat] in sync with the bell
+    OnRate = 0.1
+    OffRate = 0.58
+    
+    ShowParentEntities = 0
+    
+    
+    A = 1
+    holoCreate(A)
+    holoParent(A,E)
+    holoModel(A, "models/anytrains/props/detail/12in_emd_bell_brass.mdl")
+    holoColor(A,MasterColor)
+    holoScale(A,vec(1)*MasterScale)
+    holoPos(A,E:toWorld(vec(0,0,0)*MasterScale))
+    holoAng(A,E:toWorld(ang(0,0,0)))
+    holoEntity(A):setSubMaterial(1,BrassTexture)
+    holoEntity(A):setSubMaterial(2,SpacerTexture)
+    holoEntity(A):setSubMaterial(3,BoltTexture)
+    holoEntity(A):setSubMaterial(4,MountTexture)
+    holoEntity(A):setSubMaterial(5,RubberTexture)
+    holoBodygroup(A,1,!SpacerBlock)
+    holoBodygroup(A,2,3+RingerType)
+    holoBodygroup(A,3,Mount)
+    
+    
+    if(RingerType == 0){
+        
+    A = 2
+    holoCreate(A)
+    holoParent(A,E)
+    holoModel(A, "models/editor/axis_helper.mdl")
+    holoScale(A,vec(1)*MasterScale)
+    holoPos(A,E:toWorld(vec(-0.4,0,-2.4)*MasterScale))
+    holoAng(A,E:toWorld(ang(0,0,0)))
+    holoAlpha(A,255*ShowParentEntities)
+    
+    A = 3
+    holoCreate(A)
+    holoParent(A,2)
+    holoModel(A, "models/anytrains/props/detail/gong_horizontal.mdl")
+    holoScale(A,vec(1)*MasterScale)
+    holoPos(A,E:toWorld(vec(-0.4,0,-2.4)*MasterScale))
+    holoAng(A,E:toWorld(ang(0,0,0))) #-42.5, 0, 37.5
+    holoEntity(A):setSubMaterial(1,RingerTexture)
+    
+    }
+    elseif(RingerType == 1){
+        
+    A = 2
+    holoCreate(A)
+    holoParent(A,E)
+    holoModel(A, "models/editor/axis_helper.mdl")
+    holoScale(A,vec(1)*MasterScale)
+    holoPos(A,E:toWorld(vec(-1.31,0,-4.05)*MasterScale))
+    holoAng(A,E:toWorld(ang(0,0,0)))
+    holoAlpha(A,255*ShowParentEntities)
+    
+    A = 3
+    holoCreate(A)
+    holoParent(A,2)
+    holoModel(A, "models/anytrains/props/detail/gong_vertical.mdl")
+    holoScale(A,vec(1)*MasterScale)
+    holoPos(A,E:toWorld(vec(-1.31,0,-4.05)*MasterScale))
+    holoAng(A,E:toWorld(ang(0,0,0))) #39.5
+    holoEntity(A):setSubMaterial(1,RingerTexture)
+    
+    }   
+        
+function number angset(Var,Smoothing){ #Value Smoothing
+Layer1 = Layer1 + (Var - Layer1) /  max(Smoothing,0) 
+return Layer1
+}      
+timer("gongreset1",150)
+}
+
+if(->ToggleInput & !->NonToggleInput){
+On = ToggleInput    
+}
+elseif(!->ToggleInput & ->NonToggleInput){
+if(changed(NonToggleInput)&NonToggleInput){
+On = !On    
+}   
+}
+
+if(changed(On)&On){
+soundPlay(1,0,StartSound)   
+timer("hit1",0)  
+Hit = 0
+AngHit = 0
+HitC = 0
+}
+
+if(changed(!On)&!On){
+soundPlay(1,0,EndSound)   
+stoptimer("hit1")
+stoptimer("hit2")
+Hit = 0
+AngHit = 0
+HitC = 0
+}
+
+
+
+if(changed(clk("hit1"))&clk("hit1")){
+
+HitC += 1  
+Hit = 1
+
+timer("hit2",OnRate*1000)    
+}
+
+if(RingerType == 0){
+if(changed(HitC>2)){
+HitC = 1   
+}
+}
+elseif(RingerType == 1){
+if(changed(HitC>1)){
+HitC = 1   
+}  
+}
+
+if(RingerType == 0){
+if(changed(HitC)){
+switch(HitC){
+    case 0,
+    AngHit = 0
+    break
+    case 1,
+    AngHit = -42.5
+    break
+    case 2,
+    AngHit = 37.5  
+    break
+}
+}
+}
+elseif(RingerType == 1){
+if(changed(HitC)){
+switch(HitC){
+    case 0,
+    AngHit = 0
+    break
+    case 1,
+    AngHit = 39.5
+    break
+}
+}
+}
+
+
+
+if(clk("hit2")){
+    
+AngHit = 0
+Hit = 0
+if(RingerType == 1){
+HitC = 0   
+}
+
+timer("hit1",OffRate*1000)     
+}
+
+interval(100)
+
+holoAng(2,E:toWorld(ang(angset(AngHit,1.5),0,0)))
+
+if(clk("gongreset1")){
+AngHit = 0
+Hit = 0
+HitC = 0   
+}
